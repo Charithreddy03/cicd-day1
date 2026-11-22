@@ -3,4 +3,4 @@ def add(a, b):
 
 
 if __name__ == "__main__":
-    print("CI/CD Day 1 is working!"
+    print("CI/CD Day 1 is working!")
