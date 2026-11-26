@@ -1,9 +1,12 @@
-name: Multi Job CI Pipeline
+name: CI Pipeline Day 4
 
 on:
   push:
-  pull_request:
   workflow_dispatch:
+
+env:
+  APP_NAME: calculator
+  ENVIRONMENT: development
 
 jobs:
   test:
@@ -13,26 +16,47 @@ jobs:
       - name: Download code
         uses: actions/checkout@v6
 
-      - name: Set up Python
+      - name: Setup Python
         uses: actions/setup-python@v6
         with:
           python-version: '3.12'
 
+      - name: Display environment
+        run: |
+          echo "Application: $APP_NAME"
+          echo "Environment: $ENVIRONMENT"
+
+      - name: Check secret
+        env:
+          APP_SECRET: ${{ secrets.APP_SECRET }}
+        run: |
+          if [ -n "$APP_SECRET" ]; then
+            echo "Secret is configured"
+          else
+            echo "Secret is missing"
+            exit 1
+          fi
+
       - name: Run tests
-        run: python test_app.py
+        run: |
+          python test_app.py > test-report.txt
+          cat test-report.txt
+
+      - name: Upload test report
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-report
+          path: test-report.txt
 
   validate:
     needs: test
     runs-on: ubuntu-latest
 
     steps:
-      - name: Download code
-        uses: actions/checkout@v6
-
-      - name: Set up Python
-        uses: actions/setup-python@v6
+      - name: Download test report
+        uses: actions/download-artifact@v4
         with:
-          python-version: '3.12'
+          name: test-report
 
-      - name: Run application
-        run: python app.py
+      - name: Read test report
+        run: cat test-report.txt
